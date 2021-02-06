@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Interfaces;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Users.Commands.SignInCommand
@@ -12,37 +13,31 @@ namespace Application.Users.Commands.SignInCommand
         public string Password { get; set; }
         public string Email { get; set; }
     }
-    public class SignInCommandHandler : IRequestHandler<SignInCommand , string>
-    {
-        private readonly IApplicationDbContext _applicationDbContext;
-        private readonly IJwtManager _jwtManager;
 
-        public SignInCommandHandler(IApplicationDbContext applicationDbContext , IJwtManager jwtManager)
+    public class SignInCommandHandler : IRequestHandler<SignInCommand, string>
+    {
+        private readonly IJwtManager _jwtManager;
+        private readonly UserManager<Domain.Entities.Users> _userManager;
+
+        public SignInCommandHandler(IJwtManager jwtManager, UserManager<Domain.Entities.Users> userManager)
         {
-            _applicationDbContext = applicationDbContext;
             _jwtManager = jwtManager;
+            _userManager = userManager;
         }
+
         public async Task<string> Handle(SignInCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
-                var user =await _applicationDbContext.Users
-                    .AsNoTracking()
-                    .SingleOrDefaultAsync(x => x.Email == request.Email && x.Password == request.Password,
-                        cancellationToken: cancellationToken);
-                if (user == null)
-                {
-                    return null;
-                }
-                var token = _jwtManager.GenerateToken(user.Id,user.Name,"user");
-                return token;
-            }
-            catch (Exception )
+            
+            var user = await _userManager.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Email == request.Email, cancellationToken: cancellationToken);
+            if (user == null)
             {
                 return null;
             }
-            
 
+            var result = await _userManager.CheckPasswordAsync(user, request.Password);
+            return !result ? null : _jwtManager.GenerateToken(user.Id, user.Name, "user");
         }
     }
 }

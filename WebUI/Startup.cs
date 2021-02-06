@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using Application;
 using Infrastructure;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -47,6 +49,15 @@ namespace WebUI
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebUI v1"));
+            }
+            else
+            {
+                app.UseExceptionHandler(a => a.Run(async context =>
+                {
+                    var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+                    var exception = exceptionHandlerPathFeature.Error;
+                    await context.Response.WriteAsJsonAsync(new { error = exception.Message });
+                }));
             }
 
             app.UseHttpsRedirection();

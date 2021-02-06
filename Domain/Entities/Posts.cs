@@ -15,8 +15,8 @@ namespace Domain.Entities
         public string Content { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public Users User { get;  set; }
-        public IEnumerable<Likes> Likes { get;  set; }
-        public IEnumerable<Comments> Comments { get;  set; }
+        public ICollection<Likes> Likes { get;  set; }
+        public ICollection<Comments> Comments { get;  set; }
         
     }
 }

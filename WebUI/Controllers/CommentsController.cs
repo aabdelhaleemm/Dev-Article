@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Comments.Commands.AddCommentCommand;
 using Application.Comments.Commands.DeleteCommentCommand;
+using Infrastructure.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -23,21 +24,20 @@ namespace WebUI.Controllers
         [HttpPost("")]
         public async Task<IActionResult> AddComment(AddCommentsCommand command,CancellationToken cancellationToken)
         {
-            command.UserId = Convert.ToInt32(HttpContext.User.FindFirst("Id")?.Value); 
+            command.UserId = User.GetUserId(); 
             var comment = await _mediator.Send(command, cancellationToken);
             if (!comment)
             {
-                return BadRequest();
+                return BadRequest("Cannot add comment try again");
             }
 
-            return Ok();
+            return Created(string.Empty, string.Empty);
         }
 
-        [HttpDelete]
+        [HttpDelete("")]
         public async Task<IActionResult> DeleteComment([FromBody]int commentId,CancellationToken cancellationToken)
         {
-            var userId= Convert.ToInt32(HttpContext.User.FindFirst("Id")?.Value);
-            var comment =await _mediator.Send(new DeleteCommentCommand(commentId, userId), cancellationToken);
+            var comment =await _mediator.Send(new DeleteCommentCommand(commentId, User.GetUserId()), cancellationToken);
             if (!comment)
             {
                 return BadRequest();

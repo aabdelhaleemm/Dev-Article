@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Interfaces;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Users.Commands.DeleteUserCommand
@@ -16,29 +17,23 @@ namespace Application.Users.Commands.DeleteUserCommand
             Id = id;
         }
     }
-    
-    public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand , bool>
-    {
-        private readonly IApplicationDbContext _applicationDbContext;
 
-        public DeleteUserCommandHandler(IApplicationDbContext applicationDbContext)
+    public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, bool>
+    {
+        private readonly UserManager<Domain.Entities.Users> _userManager;
+
+        public DeleteUserCommandHandler(UserManager<Domain.Entities.Users> userManager)
         {
-            _applicationDbContext = applicationDbContext;
-        }           
+            _userManager = userManager;
+        }
+
         public async Task<bool> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
-                var user =await _applicationDbContext.Users.SingleOrDefaultAsync(x =>x.Id==request.Id, cancellationToken: cancellationToken);
-                _applicationDbContext.Users.Remove(user);
-                await _applicationDbContext.SaveChangesAsync(cancellationToken);
-                return true;
-            }
-            catch (Exception )
-            {
-                return false;
-            }
-            
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Id == request.Id,
+                cancellationToken: cancellationToken);
+            if (user == null) return false;
+            var result = await _userManager.DeleteAsync(user);
+            return result.Succeeded;
         }
     }
 }

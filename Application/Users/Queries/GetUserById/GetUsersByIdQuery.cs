@@ -5,50 +5,38 @@ using Application.Interfaces;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Users.Queries.GetUserById
 {
-    public class GetUsersByIdQuery : IRequest<UsersDto.UsersDto>, IDisposable
+    public class GetUsersByIdQuery : IRequest<UsersDto.UsersDto>
     {
         public int Id { get; set; }
-        
-        public GetUsersByIdQuery(int id )
+
+        public GetUsersByIdQuery(int id)
         {
             Id = id;
-           
-        }
-        public void Dispose()
-        {
-            throw new NotImplementedException();
         }
     }
-    
-    public class GetUserByIdQueryHandler : IRequestHandler<GetUsersByIdQuery,UsersDto.UsersDto>
+
+    public class GetUserByIdQueryHandler : IRequestHandler<GetUsersByIdQuery, UsersDto.UsersDto>
     {
-        private readonly IApplicationDbContext _applicationDbContext;
+        private readonly UserManager<Domain.Entities.Users> _userManager;
         private readonly IMapper _mapper;
 
-        public GetUserByIdQueryHandler(IApplicationDbContext applicationDbContext , IMapper mapper)
+        public GetUserByIdQueryHandler(UserManager<Domain.Entities.Users> userManager, IMapper mapper)
         {
-            _applicationDbContext = applicationDbContext;
+            _userManager = userManager;
             _mapper = mapper;
         }
+
         public async Task<UsersDto.UsersDto> Handle(GetUsersByIdQuery request, CancellationToken cancellationToken)
         {
-            try
-            {
-                var usersQuery =await _applicationDbContext.Users.AsNoTracking()
-                    .ProjectTo<UsersDto.UsersDto>(_mapper.ConfigurationProvider)
-                    .SingleOrDefaultAsync(x => x.Id == request.Id, cancellationToken: cancellationToken);
-                return usersQuery;
-            }
-            catch (Exception )
-            {
-                return null;
-            }
-            
-
+            var usersQuery = await _userManager.Users.AsNoTracking()
+                .ProjectTo<UsersDto.UsersDto>(_mapper.ConfigurationProvider)
+                .SingleOrDefaultAsync(x => x.Id == request.Id, cancellationToken: cancellationToken);
+            return usersQuery;
         }
     }
 }

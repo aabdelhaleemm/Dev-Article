@@ -11,6 +11,8 @@ namespace Application.Posts.Queries.Dto
         public string Title { get; set; }
         public string Topics { get; set; }
         public string Content { get; set; }
+        public int TotalLikes { get; set; }
+        public bool CanLike { get; set; } = true;
         public DateTime CreatedAt { get; set; } 
         public PostsUserDto User { get;  set; }
         public IEnumerable<PostsLikesDto> Likes { get;  set; }

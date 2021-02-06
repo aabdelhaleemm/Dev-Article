@@ -1,11 +1,13 @@
+using System;
 using System.Reflection;
 using Application.Interfaces;
 using Domain.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Db
 {
-    public class ApplicationDbContext : DbContext , IApplicationDbContext
+    public class ApplicationDbContext : IdentityDbContext<Users,Role,int>, IApplicationDbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             :base(options)
@@ -14,12 +16,11 @@ namespace Infrastructure.Db
         }
  //dotnet ef database update -s SchoolWebApi -p Infrastructur/
         public DbSet<Comments> Comments { get; set; }
-        public DbSet<Users> Users { get; set; }
         public DbSet<Posts> Posts { get; set; }
-        public DbSet<Likes> Likes { get; set; }
-        
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            base.OnModelCreating(builder);
           
             builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 

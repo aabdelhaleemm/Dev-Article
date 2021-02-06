@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Application.Interfaces;
 using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.Identity;
 
 namespace Application.Users.Commands.UpdateUserCommand
 {
@@ -19,29 +20,24 @@ namespace Application.Users.Commands.UpdateUserCommand
         public string Skills { get; set; }
         public string UserName { get; set; }
     }
-    public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand , bool>
+
+    public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, bool>
     {
         private readonly IMapper _mapper;
+        private readonly UserManager<Domain.Entities.Users> _userManager;
         private readonly IApplicationDbContext _applicationDbContext;
 
-        public UpdateUserCommandHandler(IMapper mapper , IApplicationDbContext applicationDbContext)
+        public UpdateUserCommandHandler(IMapper mapper, UserManager<Domain.Entities.Users> userManager)
         {
             _mapper = mapper;
-            _applicationDbContext = applicationDbContext;
+            _userManager = userManager;
         }
+
         public async Task<bool> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
-                var entity = _mapper.Map<Domain.Entities.Users>(request);
-                var user = _applicationDbContext.Users.Update(entity);
-                await _applicationDbContext.SaveChangesAsync(cancellationToken);
-                return true;
-            }
-            catch (Exception )
-            {
-                return false;
-            }
+            var entity = _mapper.Map<Domain.Entities.Users>(request);
+            var user = await _userManager.UpdateAsync(entity);
+            return user.Succeeded;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Application.Likes.Commands.AddLikesCommand;
 using Application.Likes.Commands.DeleteLikesCommand;
+using Infrastructure.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,11 +22,10 @@ namespace WebUI.Controllers
             _mediator = mediator;
         }
 
-        [HttpPost("")]
-        public async Task<IActionResult> AddLike([FromBody]int postId,CancellationToken cancellationToken)
+        [HttpPost("{postId}")]
+        public async Task<IActionResult> AddLike(int postId,CancellationToken cancellationToken)
         {
-            var userId = Convert.ToInt32(HttpContext.User.FindFirst("Id")?.Value) ;
-            var like =await _mediator.Send(new AddLikesCommand(postId, userId), cancellationToken);
+            var like =await _mediator.Send(new AddLikesCommand(postId, User.GetUserId()), cancellationToken);
             if (!like)
             {
                 return BadRequest();
@@ -38,8 +38,7 @@ namespace WebUI.Controllers
         [HttpDelete("")]
         public async Task<IActionResult> DeleteLike([FromBody] int postId,CancellationToken cancellationToken)
         {
-            var userId = Convert.ToInt32(HttpContext.User.FindFirst("Id")?.Value) ;
-            var like =await _mediator.Send(new DeleteLikesCommand(postId, userId), cancellationToken);
+            var like =await _mediator.Send(new DeleteLikesCommand(postId, User.GetUserId()), cancellationToken);
             if (!like)
             {
                 return BadRequest();

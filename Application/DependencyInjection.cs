@@ -1,4 +1,5 @@
 using System.Reflection;
+using Application.Common;
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +12,8 @@ namespace Application
         public static IServiceCollection AddApplication(this IServiceCollection services,
             IConfiguration configuration)
         {
+            services.Configure<CloudinarySettings>(configuration.GetSection("CloudinarySettings"));
+            
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
             services.AddMediatR(Assembly.GetExecutingAssembly());
 

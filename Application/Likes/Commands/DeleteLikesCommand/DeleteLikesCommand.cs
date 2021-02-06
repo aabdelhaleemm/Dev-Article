@@ -12,15 +12,14 @@ namespace Application.Likes.Commands.DeleteLikesCommand
         public int PostId { get; set; }
         public int UserId { get; set; }
 
-        public DeleteLikesCommand(int postId , int userId)
+        public DeleteLikesCommand(int postId, int userId)
         {
             PostId = postId;
             UserId = userId;
         }
-        
     }
-    
-    public class DeleteLikesCommandHandler: IRequestHandler<DeleteLikesCommand,bool>
+
+    public class DeleteLikesCommandHandler : IRequestHandler<DeleteLikesCommand, bool>
     {
         private readonly IApplicationDbContext _applicationDbContext;
 
@@ -28,25 +27,19 @@ namespace Application.Likes.Commands.DeleteLikesCommand
         {
             _applicationDbContext = applicationDbContext;
         }
+
         public async Task<bool> Handle(DeleteLikesCommand request, CancellationToken cancellationToken)
         {
-            try
+            var post =await _applicationDbContext.Posts
+                .Include(x=>x.Likes)
+                .FirstOrDefaultAsync(x => x.Id == request.PostId, cancellationToken: cancellationToken);
+            post.Likes.Remove(new Domain.Entities.Likes()
             {
-                var like =await _applicationDbContext.Likes.SingleOrDefaultAsync(x =>
-                    x.PostId == request.UserId && x.PostId == request.PostId, cancellationToken: cancellationToken);
-                if (like == null)
-                {
-                    return false;
-                }
+                UserId = request.UserId,
+                PostId = request.PostId
+            });
+            return await _applicationDbContext.SaveChangesAsync(cancellationToken) > 0;
 
-                _applicationDbContext.Likes.Remove(like);
-                await _applicationDbContext.SaveChangesAsync(cancellationToken);
-                return true;
-            }
-            catch (Exception )
-            {
-                return false;
-            }
         }
     }
 }

@@ -13,31 +13,27 @@ namespace Application.Comments.Commands.AddCommentCommand
         public int UserId { get; set; }
         public int PostId { get; set; }
         public string Content { get; set; }
+       
     }
-    
-    public class AddCommentsCommandHandler : IRequestHandler<AddCommentsCommand , bool>
+
+    public class AddCommentsCommandHandler : IRequestHandler<AddCommentsCommand, bool>
     {
         private readonly IApplicationDbContext _applicationDbContext;
         private readonly IMapper _mapper;
 
-        public AddCommentsCommandHandler(IApplicationDbContext applicationDbContext , IMapper mapper)
+        public AddCommentsCommandHandler(IApplicationDbContext applicationDbContext, IMapper mapper)
         {
             _applicationDbContext = applicationDbContext;
             _mapper = mapper;
         }
+
         public async Task<bool> Handle(AddCommentsCommand request, CancellationToken cancellationToken)
         {
-            try
-            {
-                var comment = _mapper.Map<Domain.Entities.Comments>(request);
-                await _applicationDbContext.Comments.AddAsync(comment, cancellationToken);
-                await _applicationDbContext.SaveChangesAsync(cancellationToken);
-                return true;
-            }
-            catch (Exception )
-            {
-                return false;
-            }
+            var comment = _mapper.Map<Domain.Entities.Comments>(request);
+            comment.CreatedAt=DateTime.Now;
+            await _applicationDbContext.Comments.AddAsync(comment, cancellationToken);
+            await _applicationDbContext.SaveChangesAsync(cancellationToken);
+            return true;
         }
     }
 }

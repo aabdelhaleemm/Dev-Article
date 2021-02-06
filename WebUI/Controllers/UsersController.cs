@@ -2,13 +2,17 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.S3.Util;
+using Application.Users.Commands.AddProfilePhotoCommand;
+using Application.Users.Commands.DeleteProfilePhotoCommand;
 using Application.Users.Commands.DeleteUserCommand;
 using Application.Users.Commands.SignInCommand;
 using Application.Users.Commands.SignUpCommand;
 using Application.Users.Commands.UpdateUserCommand;
 using Application.Users.Queries.GetUserById;
+using Infrastructure.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebUI.Controllers
@@ -29,11 +33,7 @@ namespace WebUI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(int id , CancellationToken cancellationToken)
         {
-            using var getUserByIdQuery = new GetUsersByIdQuery(id);
-            var user =await  _mediator.Send(getUserByIdQuery, cancellationToken);
-            
-            
-                
+            var user =await  _mediator.Send(new GetUsersByIdQuery(id), cancellationToken);
             if (user == null)
             {
                 return NotFound();
@@ -48,7 +48,7 @@ namespace WebUI.Controllers
             var token = await _mediator.Send(command, cancellationToken);
             if (token == null)
             {
-                return BadRequest(new {error= "invalid email or password"});
+                return BadRequest( "invalid email or password");
             }
             return Ok(token);
         }
@@ -59,7 +59,7 @@ namespace WebUI.Controllers
             var token =await _mediator.Send(command, cancellationToken);
             if (token == null)
             {
-                return BadRequest(new {error = "Email or username already in use"});
+                return BadRequest("Email or username already in use");
             }
             return Ok(token);
         }
@@ -67,6 +67,7 @@ namespace WebUI.Controllers
         [HttpPut]
         public async Task<IActionResult> EditUser(UpdateUserCommand command,CancellationToken cancellationToken)
         {
+            command.Id = User.GetUserId();
             var user =await _mediator.Send(command, cancellationToken);
             if (!user)
             {
@@ -78,17 +79,28 @@ namespace WebUI.Controllers
         [HttpDelete]
         public async Task<IActionResult> DeleteUser(CancellationToken cancellationToken)
         {
-            if (HttpContext == null)
-            {
-                return BadRequest(new {error = "Can't specify user id"});
-            }
-            var id = Convert.ToInt32(HttpContext.User.FindFirst("Id")?.Value) ;
-            var user =await _mediator.Send(new DeleteUserCommand(id), cancellationToken);
+            var user =await _mediator.Send(new DeleteUserCommand(User.GetUserId()), cancellationToken);
             if (!user)
             {
-                return BadRequest(new {error = "The operation couldn't be completed"});
+                return BadRequest( "The operation couldn't be completed");
             }
             return Ok();
         }
+        [HttpPost("Photo")]
+        public async Task<IActionResult> AddProfilePhoto(IFormFile file ,CancellationToken cancellationToken)
+        {
+            var user =await _mediator.Send(new AddProfilePhotoCommand(file, User.GetUserId()), cancellationToken);
+            if (!user) return BadRequest("Cannot add the photo");
+            return Created(string.Empty, string.Empty);
+        }
+
+        [HttpDelete("Photo")]
+        public async Task<IActionResult> DeleteProfilePhoto()
+        {
+            var user =await _mediator.Send(new DeleteProfilePhotoCommand(User.GetUserId()));
+            if (!user) return BadRequest("Cannot delete this photo");
+            return Ok();
+        }
+        
     }
 }

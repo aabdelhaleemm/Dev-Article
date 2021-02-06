@@ -5,10 +5,10 @@ using Application.Posts.Commands.AddPostsCommand;
 using Application.Posts.Commands.DeletePostsCommand;
 using Application.Posts.Commands.UpdatePostsCommand;
 using Application.Posts.Queries.GetPostsByIdQuery;
+using Infrastructure.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 namespace WebUI.Controllers
 {
     [Authorize]
@@ -27,24 +27,23 @@ namespace WebUI.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPostById(int id,CancellationToken cancellationToken)
         {
-            var posts= await _mediator.Send(new GetPostsByIdQuery(id), cancellationToken);
+            var posts= await _mediator.Send(new GetPostsByIdQuery(id,User.GetUserId()), cancellationToken);
             if (posts == null)
             {
                 return NotFound();
             }
             return Ok(posts);
         }
-
         [HttpPost]
         public async Task<IActionResult> AddPosts(AddPostsCommand command,CancellationToken cancellationToken)
         {
-            command.UserId = Convert.ToInt32(User.FindFirst("Id")?.Value!); ;
+            command.UserId = User.GetUserId();
             var post =await _mediator.Send(command, cancellationToken);
             if (!post)
             {
-                return BadRequest(new {error = "Couldn't add the post"});
+                return BadRequest( "Couldn't add the post");
             }
-            return Ok();
+            return Created(string.Empty, string.Empty);
         }
 
         [HttpPut]
@@ -53,7 +52,7 @@ namespace WebUI.Controllers
             var post = await _mediator.Send(command, cancellationToken);
             if (!post)
             {
-                return BadRequest(new {error = "The operation couldn't be completed"});
+                return BadRequest("The operation couldn't be completed");
             }
             return Ok();
         }
@@ -61,8 +60,7 @@ namespace WebUI.Controllers
         [HttpDelete]
         public async Task<IActionResult> DeletePost([FromBody] int postId,CancellationToken cancellationToken)
         {
-            var userId = Convert.ToInt32(HttpContext.User.FindFirst("Id")?.Value) ;
-            var post = await _mediator.Send(new DeletePostsCommand(postId,userId), cancellationToken);
+            var post = await _mediator.Send(new DeletePostsCommand(postId,User.GetUserId()), cancellationToken);
             if (!post)
             {
                 return BadRequest();

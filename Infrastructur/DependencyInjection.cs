@@ -1,5 +1,6 @@
 using System.Text;
 using Application.Interfaces;
+using Domain.Entities;
 using Infrastructure.Db;
 using Infrastructure.JWT;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -15,8 +16,17 @@ namespace Infrastructure
         public static IServiceCollection AddInfrastructure(this IServiceCollection services,
             IConfiguration configuration ,string key)
         {
+            services.AddScoped<IPhotoService, PhotoService.PhotoService>();
             services.AddDbContextPool<ApplicationDbContext>(opt => opt.UseSqlServer(
                 configuration.GetConnectionString("Db")));
+
+            services.AddIdentity<Users, Role>(opt =>
+                {
+                    opt.Password.RequireNonAlphanumeric = false;
+                    opt.Password.RequireUppercase = false;
+                })
+                .AddEntityFrameworkStores<ApplicationDbContext>();
+            
             services.AddScoped<IApplicationDbContext>(provider => provider.GetService<ApplicationDbContext>());
             
             services.AddSingleton<IJwtManager>(new JwtManager(configuration["JWT:key"]));
