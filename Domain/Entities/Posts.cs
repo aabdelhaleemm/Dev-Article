@@ -9,6 +9,8 @@ namespace Domain.Entities
         
         [Key]
         public int Id { get; set; }
+
+        public int TotalLikes { get; set; }
         public int UserId { get;  set; }
         public string Title { get; set; }
         public string Topics { get; set; }

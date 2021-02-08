@@ -1,9 +1,9 @@
-using System;
+
 using System.Threading;
 using System.Threading.Tasks;
+using Application.Common.Extensions;
 using Application.Likes.Commands.AddLikesCommand;
 using Application.Likes.Commands.DeleteLikesCommand;
-using Infrastructure.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

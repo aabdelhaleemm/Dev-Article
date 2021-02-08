@@ -1,5 +1,5 @@
 using System.Text;
-using Application.Interfaces;
+using Application.Common.Interfaces;
 using Domain.Entities;
 using Infrastructure.Db;
 using Infrastructure.JWT;

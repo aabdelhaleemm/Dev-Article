@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
-using Application.Common;
-using Application.Interfaces;
+using Application.Common.Coludianry;
+using Application.Common.Interfaces;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Http;

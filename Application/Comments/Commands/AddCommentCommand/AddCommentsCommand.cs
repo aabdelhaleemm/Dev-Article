@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Application.Interfaces;
+using Application.Common.Interfaces;
 using AutoMapper;
 using MediatR;
 
@@ -19,11 +19,13 @@ namespace Application.Comments.Commands.AddCommentCommand
     public class AddCommentsCommandHandler : IRequestHandler<AddCommentsCommand, bool>
     {
         private readonly IApplicationDbContext _applicationDbContext;
+        private readonly ICacheService _cacheService;
         private readonly IMapper _mapper;
 
-        public AddCommentsCommandHandler(IApplicationDbContext applicationDbContext, IMapper mapper)
+        public AddCommentsCommandHandler(IApplicationDbContext applicationDbContext,ICacheService cacheService, IMapper mapper)
         {
             _applicationDbContext = applicationDbContext;
+            _cacheService = cacheService;
             _mapper = mapper;
         }
 
@@ -32,7 +34,8 @@ namespace Application.Comments.Commands.AddCommentCommand
             var comment = _mapper.Map<Domain.Entities.Comments>(request);
             comment.CreatedAt=DateTime.Now;
             await _applicationDbContext.Comments.AddAsync(comment, cancellationToken);
-            await _applicationDbContext.SaveChangesAsync(cancellationToken);
+            if (await _applicationDbContext.SaveChangesAsync(cancellationToken) <= 0) return false;
+            await _cacheService.DeleteKeyAsync($"post{request.PostId}");
             return true;
         }
     }

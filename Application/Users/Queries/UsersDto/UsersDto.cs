@@ -9,6 +9,7 @@ namespace Application.Users.Queries.UsersDto
         public int Id { get; set; }
         public string Name { get; set; }
         public string Bio { get; set; }
+        public string PhotoURl { get; set; }
         public string Country { get; set; }
         public DateTime JoinedAt { get; set; }
         public string Skills { get; set; }

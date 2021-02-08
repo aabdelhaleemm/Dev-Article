@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Application.Interfaces;
+using Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,10 +22,12 @@ namespace Application.Likes.Commands.DeleteLikesCommand
     public class DeleteLikesCommandHandler : IRequestHandler<DeleteLikesCommand, bool>
     {
         private readonly IApplicationDbContext _applicationDbContext;
+        private readonly ICacheService _cacheService;
 
-        public DeleteLikesCommandHandler(IApplicationDbContext applicationDbContext)
+        public DeleteLikesCommandHandler(IApplicationDbContext applicationDbContext , ICacheService cacheService)
         {
             _applicationDbContext = applicationDbContext;
+            _cacheService = cacheService;
         }
 
         public async Task<bool> Handle(DeleteLikesCommand request, CancellationToken cancellationToken)
@@ -38,7 +40,10 @@ namespace Application.Likes.Commands.DeleteLikesCommand
                 UserId = request.UserId,
                 PostId = request.PostId
             });
-            return await _applicationDbContext.SaveChangesAsync(cancellationToken) > 0;
+            post.TotalLikes -= 1;
+            if (await _applicationDbContext.SaveChangesAsync(cancellationToken) <= 0) return false;
+            await _cacheService.DeleteKeyAsync($"post{request.PostId}");
+            return true;
 
         }
     }

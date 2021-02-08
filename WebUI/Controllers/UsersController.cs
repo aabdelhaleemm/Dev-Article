@@ -1,7 +1,7 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.S3.Util;
+using Application.Common.Extensions;
+using Application.Common.Interfaces;
 using Application.Users.Commands.AddProfilePhotoCommand;
 using Application.Users.Commands.DeleteProfilePhotoCommand;
 using Application.Users.Commands.DeleteUserCommand;
@@ -9,11 +9,12 @@ using Application.Users.Commands.SignInCommand;
 using Application.Users.Commands.SignUpCommand;
 using Application.Users.Commands.UpdateUserCommand;
 using Application.Users.Queries.GetUserById;
-using Infrastructure.Extensions;
+using Application.Users.Queries.UsersDto;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace WebUI.Controllers
 {
@@ -23,10 +24,12 @@ namespace WebUI.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly ICacheService _cacheService;
 
-        public UsersController(IMediator mediator)
+        public UsersController(IMediator mediator , ICacheService cacheService)
         {
             _mediator = mediator;
+            _cacheService = cacheService;
         }
 
         [AllowAnonymous]
@@ -95,9 +98,9 @@ namespace WebUI.Controllers
         }
 
         [HttpDelete("Photo")]
-        public async Task<IActionResult> DeleteProfilePhoto()
+        public async Task<IActionResult> DeleteProfilePhoto(CancellationToken cancellationToken)
         {
-            var user =await _mediator.Send(new DeleteProfilePhotoCommand(User.GetUserId()));
+            var user =await _mediator.Send(new DeleteProfilePhotoCommand(User.GetUserId()), cancellationToken);
             if (!user) return BadRequest("Cannot delete this photo");
             return Ok();
         }

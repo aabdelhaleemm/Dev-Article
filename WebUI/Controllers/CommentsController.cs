@@ -1,9 +1,8 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Comments.Commands.AddCommentCommand;
 using Application.Comments.Commands.DeleteCommentCommand;
-using Infrastructure.Extensions;
+using Application.Common.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,9 +34,10 @@ namespace WebUI.Controllers
         }
 
         [HttpDelete("")]
-        public async Task<IActionResult> DeleteComment([FromBody]int commentId,CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteComment(DeleteCommentCommand command,CancellationToken cancellationToken)
         {
-            var comment =await _mediator.Send(new DeleteCommentCommand(commentId, User.GetUserId()), cancellationToken);
+            command.UserId = User.GetUserId();
+            var comment =await _mediator.Send(command, cancellationToken);
             if (!comment)
             {
                 return BadRequest();

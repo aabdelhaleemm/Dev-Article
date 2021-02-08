@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Application.Interfaces;
+using Application.Common.Interfaces;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -25,18 +25,20 @@ namespace Application.Users.Commands.UpdateUserCommand
     {
         private readonly IMapper _mapper;
         private readonly UserManager<Domain.Entities.Users> _userManager;
-        private readonly IApplicationDbContext _applicationDbContext;
+        private readonly ICacheService _cacheService;
 
-        public UpdateUserCommandHandler(IMapper mapper, UserManager<Domain.Entities.Users> userManager)
+        public UpdateUserCommandHandler(IMapper mapper, UserManager<Domain.Entities.Users> userManager , ICacheService cacheService)
         {
             _mapper = mapper;
             _userManager = userManager;
+            _cacheService = cacheService;
         }
 
         public async Task<bool> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
         {
             var entity = _mapper.Map<Domain.Entities.Users>(request);
             var user = await _userManager.UpdateAsync(entity);
+            await _cacheService.DeleteKeyAsync($"user{request.Id}");
             return user.Succeeded;
         }
     }

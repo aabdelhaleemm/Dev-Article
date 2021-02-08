@@ -1,7 +1,7 @@
 using System;
 using System.Security.Claims;
 
-namespace Infrastructure.Extensions
+namespace Application.Common.Extensions
 {
     public static class ClaimsPrinciplesExtension
     {

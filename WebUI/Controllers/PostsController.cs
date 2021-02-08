@@ -1,14 +1,18 @@
-using System;
+
 using System.Threading;
 using System.Threading.Tasks;
+using Application.Common.Extensions;
 using Application.Posts.Commands.AddPostsCommand;
 using Application.Posts.Commands.DeletePostsCommand;
 using Application.Posts.Commands.UpdatePostsCommand;
 using Application.Posts.Queries.GetPostsByIdQuery;
-using Infrastructure.Extensions;
+using Application.Posts.Queries.GetPostsWithPagination;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
+using StackExchange.Redis;
+
 namespace WebUI.Controllers
 {
     [Authorize]
@@ -17,11 +21,14 @@ namespace WebUI.Controllers
     public class PostsController : ControllerBase
     {
         private readonly IMediator _mediator;
-        
-        public PostsController(IMediator mediator)
+
+        private readonly IConnectionMultiplexer _connectionMultiplexer;
+
+        public PostsController(IMediator mediator,  IConnectionMultiplexer connectionMultiplexer)
         {
             _mediator = mediator;
-           
+
+            _connectionMultiplexer = connectionMultiplexer;
         }
         [AllowAnonymous]
         [HttpGet("{id}")]
@@ -33,6 +40,15 @@ namespace WebUI.Controllers
                 return NotFound();
             }
             return Ok(posts);
+        }
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> GetPosts([FromQuery] GetPostsWithPaginationQuery query,CancellationToken cancellationToken)
+        {
+            query.UserId = User.GetUserId();
+            var post =await _mediator.Send(query, cancellationToken);
+            
+            return Ok(post);
         }
         [HttpPost]
         public async Task<IActionResult> AddPosts(AddPostsCommand command,CancellationToken cancellationToken)
@@ -58,9 +74,10 @@ namespace WebUI.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeletePost([FromBody] int postId,CancellationToken cancellationToken)
+        public async Task<IActionResult> DeletePost(DeletePostsCommand command,CancellationToken cancellationToken)
         {
-            var post = await _mediator.Send(new DeletePostsCommand(postId,User.GetUserId()), cancellationToken);
+            command.UserId = User.GetUserId();
+            var post = await _mediator.Send(command, cancellationToken);
             if (!post)
             {
                 return BadRequest();

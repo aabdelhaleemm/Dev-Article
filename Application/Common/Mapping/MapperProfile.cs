@@ -1,4 +1,3 @@
-
 using System.Linq;
 using Application.Comments.Commands.AddCommentCommand;
 using Application.Posts.Commands.AddPostsCommand;
@@ -7,20 +6,15 @@ using Application.Users.Commands.SignUpCommand;
 using Application.Users.Commands.UpdateUserCommand;
 using Application.Users.Queries.UsersDto;
 using AutoMapper;
-using Domain.Entities;
-using Microsoft.EntityFrameworkCore.Migrations.Operations;
 
-namespace Application.Mapping
+namespace Application.Common.Mapping
 {
     public class MapperProfile : Profile
     {
         public MapperProfile()
         {
-            //Source -> Target
-            CreateMap<Domain.Entities.Posts, PostsDto>()
-                .ForMember(x => x.TotalLikes,
-                    opt =>
-                        opt.MapFrom(x => x.Likes.Count));
+            //Source -> Target 
+            CreateMap<Domain.Entities.Posts, PostsDto>();
             CreateMap<Domain.Entities.Likes, PostsLikesDto>();
             CreateMap<Domain.Entities.Comments, PostsCommentsDto>();
             CreateMap<Domain.Entities.Users, PostsCommentsUsersDto>();
